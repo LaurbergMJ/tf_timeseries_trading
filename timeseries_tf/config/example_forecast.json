@@ -1,0 +1,23 @@
+{
+  "data": {
+    "csv_path": "data/your_prices.csv",
+    "date_column": "date",
+    "price_column": "close",
+    "parse_dates": true
+  },
+  "features": {
+    "use_log_returns": true,
+    "window_size": 60,
+    "horizon": 1
+  },
+  "training": {
+    "batch_size": 64,
+    "epochs": 50,
+    "learning_rate": 0.001,
+    "validation_split": 0.2
+  },
+  "model": {
+    "type": "mlp",
+    "hidden_units": [64, 32]
+  }
+}

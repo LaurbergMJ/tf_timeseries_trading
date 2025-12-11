@@ -1,0 +1,50 @@
+import numpy as np
+import tensorflow as tf 
+from typing import Tuple
+
+def make_supervised_windows(
+        series: np.ndarray,
+        window_size: int,
+        horizon: int = 1, 
+    ) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Create (X,y) arrays from a 1D series
+    
+    X shape: (num_samples, window_size, 1)
+    y shape: (num_samples, horizon)
+    """
+
+    X, y = [], []
+    series = np.asarray(series)
+
+    if series.ndim != 1:
+        raise ValueError("Input series must be 1-dimensional.")
+    
+    num_samples = len(series) - window_size - horizon + 1
+    if num_samples <= 0:
+        raise ValueError("Not enough data points to create a single window.")
+    
+    for i in range(num_samples):
+        window = series[i : i + window_size]
+        target = series[i + window_size : i + window_size + horizon]
+        X.append(window)
+        y.append(target)
+    
+    X = np.array(X)[..., np.newaxis]
+    y = np.array(y)
+    return X, y
+
+
+def make_tf_dataset(
+        X: np.ndarray,
+        y: np.ndarray,
+        batch_size: int = 64,
+        shuffle: bool = True,
+) -> tf.data.Dataset:
+    ds = tf.data.Dataset.from_tensor_slices((X, y))
+
+    if shuffle:
+        ds = ds.shuffle(buffer_size=min(1000, len(X)))
+    ds = ds.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+    return ds
+
