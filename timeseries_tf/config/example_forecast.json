@@ -1,6 +1,6 @@
 {
   "data": {
-    "csv_path": "data/your_prices.csv",
+    "csv_path": "data/eod_SX5E_index.csv",
     "date_column": "date",
     "price_column": "close",
     "parse_dates": true
