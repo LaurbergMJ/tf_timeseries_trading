@@ -49,4 +49,5 @@ def train_model(
             validation_split=config.validation_split,
             callbacks=callbacks,
         )
+        
     return history
