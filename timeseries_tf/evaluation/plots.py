@@ -20,3 +20,5 @@ def plot_price_and_forecast(
     plt.title("Price vs 1-step forecast")
     plt.tight_layout()
     plt.show()
+
+    

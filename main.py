@@ -1,0 +1,3 @@
+from timeseries_tf.experiments.forecast_baseline import run_forecast_experiment
+
+run_forecast_experiment()
