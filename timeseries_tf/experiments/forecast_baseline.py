@@ -7,7 +7,7 @@ import tensorflow as tf
 from timeseries_tf.data.loader import load_ohlc_csv
 from timeseries_tf.data.features import add_log_returns
 from timeseries_tf.data.windowing import make_supervised_windows, make_tf_dataset
-from timeseries_tf.models import build_mlp_forecaster
+from timeseries_tf.models import build_mlp_forecaster, build_lstm_forecaster
 from timeseries_tf.training.trainer import TrainingConfig, train_model
 from timeseries_tf.evaluation.metrics import mae, rmse 
 from timeseries_tf.evaluation.plots import plot_price_and_forecast 
@@ -54,6 +54,14 @@ def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_for
             window_size=window_size,
             horizon=horizon,
             hidden_units=model_cfg.get("hidden_units", [64, 32]),
+            learning_rate=train_cfg.get("learning_rate", 1e-3),
+        )
+    if model_cfg["type"] == "lstm":
+        model = build_lstm_forecaster(
+            window_size=window_size,
+            horizon=horizon,
+            lstm_units=model_cfg.get("lstm_units", 64),
+            dense_units=model_cfg.get("dense_units", 32),
             learning_rate=train_cfg.get("learning_rate", 1e-3),
         )
     else:
