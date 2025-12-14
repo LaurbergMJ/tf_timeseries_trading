@@ -24,7 +24,7 @@ def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_for
     # --- Load data ---
     df = load_ohlc_csv(
         csv_path=data_cfg["csv_path"],
-        date_column=data_cfg.get("date_column", "date"),
+        date_col=data_cfg.get("date_column", "date"),
     )
 
     df = add_log_returns(df, price_col=data_cfg.get("price_column", "close"))
@@ -43,7 +43,7 @@ def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_for
     X_train, y_train = X[:split_idx], y[:split_idx]
     X_test, y_test = X[split_idx:], y[split_idx:]
 
-    train_ds = make_tf_dataset(X_train, y_train, batch_size=train_cfg["batch"])
+    train_ds = make_tf_dataset(X_train, y_train, batch_size=train_cfg["batch_size"])
     test_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(
         train_cfg["batch_size"]
     )
@@ -61,8 +61,8 @@ def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_for
     
     # --- Train --- 
     config = TrainingConfig(
-        epochs=train_cfg.["epochs"],
-        batch_size=train_cfg["batch_size="],
+        epochs=train_cfg["epochs"],
+        batch_size=train_cfg["batch_size"],
         validation_split=train_cfg.get("validation_split", 0.2),
         patience=train_cfg.get("patience", 10),
     )

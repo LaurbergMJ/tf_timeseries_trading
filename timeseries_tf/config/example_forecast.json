@@ -1,6 +1,6 @@
 {
   "data": {
-    "csv_path": "data/eod_SX5E_index.csv",
+    "csv_path": "timeseries_tf/data/eod_SX5E_index.csv",
     "date_column": "date",
     "price_column": "close",
     "parse_dates": true
@@ -17,7 +17,7 @@
     "validation_split": 0.2
   },
   "model": {
-    "type": "mlp",
+    "type": "lstm",
     "hidden_units": [64, 32]
   }
 }
