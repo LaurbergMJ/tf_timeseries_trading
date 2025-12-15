@@ -93,6 +93,6 @@ def make_supervised_windows_with_dates(
 
     X = np.array(X)[..., np.newaxis]
     y = np.array(y)
-    y_dates.append(dates[target_end_idx])
+    y_dates = pd.DatetimeIndex(y_dates)
 
     return X, y, y_dates

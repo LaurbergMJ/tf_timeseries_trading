@@ -6,11 +6,12 @@ import tensorflow as tf
 
 from timeseries_tf.data.loader import load_ohlc_csv
 from timeseries_tf.data.features import add_log_returns
-from timeseries_tf.data.windowing import make_supervised_windows, make_tf_dataset
+from timeseries_tf.data.windowing import make_supervised_windows, make_tf_dataset, make_supervised_windows_with_dates
 from timeseries_tf.models import build_mlp_forecaster, build_lstm_forecaster
 from timeseries_tf.training.trainer import TrainingConfig, train_model
 from timeseries_tf.evaluation.metrics import mae, rmse 
-from timeseries_tf.evaluation.plots import plot_price_and_forecast 
+from timeseries_tf.evaluation.plots import plot_price_and_forecast
+from timeseries_tf.evaluation.walk_forward import walk_forward_forecast_regression
 
 def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_forecast.json"):
     with open(config_path, "r") as f:
@@ -38,6 +39,15 @@ def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_for
 
     X, y = make_supervised_windows(series, window_size=window_size, horizon=horizon)
 
+
+    X, y, y_dates = make_supervised_windows_with_dates(
+        series=series,
+        dates=df.index,
+        window_size=window_size,
+        horizon=horizon,
+    )
+
+
     # simple train/test split in time 
     split_idx = int(len(X) * 0.8)
     X_train, y_train = X[:split_idx], y[:split_idx]
@@ -49,24 +59,44 @@ def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_for
     )
 
     # --- Buld model ---
-    if model_cfg["type"] == "mlp":
-        model = build_mlp_forecaster(
-            window_size=window_size,
-            horizon=horizon,
-            hidden_units=model_cfg.get("hidden_units", [64, 32]),
-            learning_rate=train_cfg.get("learning_rate", 1e-3),
-        )
-    if model_cfg["type"] == "lstm":
-        model = build_lstm_forecaster(
-            window_size=window_size,
-            horizon=horizon,
-            lstm_units=model_cfg.get("lstm_units", 64),
-            dense_units=model_cfg.get("dense_units", 32),
-            learning_rate=train_cfg.get("learning_rate", 1e-3),
-        )
-    else:
-        raise ValueError(f"Unknown model type: {model_cfg['type']}")
     
+    def model_factory():
+        if model_cfg["type"] == "mlp":
+            return build_mlp_forecaster(
+                window_size=window_size,
+                horizon=horizon,
+                hidden_units=model_cfg.get("hidden_units", [64, 32]),
+                learning_rate=train_cfg.get("learning_rate", 1e-3),
+            )
+        elif model_cfg["type"] == "lstm":
+            return build_lstm_forecaster(
+                window_size=window_size,
+                horizon=horizon,
+                lstm_units=model_cfg.get("lstm_units", 64),
+                dense_units=model_cfg.get("dense_units", 32),
+                learning_rate=train_cfg.get("learning_rate", 1e-3),
+            )
+        else:
+            raise ValueError(f"Unknown model type: {model_cfg['type']}")
+    
+    folds_df, summary_df = walk_forward_forecast_regression(
+        model_factory=model_factory,
+        X=X,
+        y=y,
+        y_dates=y_dates,
+        batch_size=train_cfg["batch_size"],
+        epochs=train_cfg["epochs"],
+        patience=train_cfg.get("patience", 10),
+        min_train_years=1,
+        test_years=1,
+        step_years=1,
+        verbose=1,
+    )
+
+    print("\nPer-fold results:\n", folds_df)
+    print("\nSummary results:\n", summary_df)
+
+
     # --- Train --- 
     config = TrainingConfig(
         epochs=train_cfg["epochs"],
@@ -75,26 +105,26 @@ def run_forecast_experiment(config_path: str = "timeseries_tf/config/example_for
         patience=train_cfg.get("patience", 10),
     )
 
-    history = train_model(
-        model,
-        train_ds,
-        test_ds,
-        config,
-        use_tf_dataset=True,
-    )
+    # history = train_model(
+    #     model,
+    #     train_ds,
+    #     test_ds,
+    #     config,
+    #     use_tf_dataset=True,
+    # )
 
     # --- Evaluate ---
-    y_pred = model.predict(X_test).squeeze()
-    y_true = y_test.squeeze()
+    #y_pred = model.predict(X_test).squeeze()
+    #y_true = y_test.squeeze()
 
-    print("Test MAE:", mae(y_true, y_pred))
-    print("Test RMSE:", rmse(y_true, y_pred))
+    #print("Test MAE:", mae(y_true, y_pred))
+    #print("Test RMSE:", rmse(y_true, y_pred))
 
     # --- Plot ---
-    plot_price_and_forecast(
-        dates=df.index,
-        prices=df["close"].values,
-        forecasts=y_pred,
-        start_idx=split_idx,
-    )
+    # plot_price_and_forecast(
+    #     dates=df.index,
+    #     prices=df["close"].values,
+    #     forecasts=y_pred,
+    #     start_idx=split_idx,
+    # )
     

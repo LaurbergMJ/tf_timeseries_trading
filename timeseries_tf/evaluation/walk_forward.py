@@ -24,7 +24,7 @@ class WalkForwardFold:
 
 def make_yearly_walk_forward_folds(
     y_dates: pd.DatetimeIndex,
-    min_train_years: int = 3,
+    min_train_years: int = 1,
     test_years: int = 1,
     step_years: int = 1,
     ) -> List[Tuple[np.ndarray, np.ndarray, Dict[str, pd.Timestamp]]]:
@@ -136,7 +136,7 @@ def walk_forward_forecast_regression(
 
         m = {
             "mae": mae(y_true_1d, y_pred_1d),
-            "rmse": rmse(y_true_1, y_pred_1d),
+            "rmse": rmse(y_true_1d, y_pred_1d),
             "directional_acc": float(np.mean(np.sign(y_pred_1d) == np.sign(y_true_1d))),
             "corr": float(np.corrcoef(y_pred_1d, y_true_1d)[0, 1]) if len(y_true_1d) < 2 else float("nan")
         }
