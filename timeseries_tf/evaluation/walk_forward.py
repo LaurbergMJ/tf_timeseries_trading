@@ -138,7 +138,7 @@ def walk_forward_forecast_regression(
             "mae": mae(y_true_1d, y_pred_1d),
             "rmse": rmse(y_true_1d, y_pred_1d),
             "directional_acc": float(np.mean(np.sign(y_pred_1d) == np.sign(y_true_1d))),
-            "corr": float(np.corrcoef(y_pred_1d, y_true_1d)[0, 1]) if len(y_true_1d) < 2 else float("nan")
+            "corr": float(np.corrcoef(y_pred_1d, y_true_1d)[0, 1]) if len(y_true_1d) >= 2 else float("nan")
         }
 
         fold_rows.append(
@@ -183,7 +183,7 @@ def walk_forward_forecast_regression(
             }
         )
 
-        return folds_df, summary_df
+    return folds_df, summary_df
 
 
     
